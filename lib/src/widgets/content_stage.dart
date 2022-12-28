@@ -1,26 +1,28 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pos/src/interfaces/item.dart';
 import 'package:pos/src/interfaces/menu_list.dart';
-import 'package:pos/src/screens/recipient.dart';
+import 'package:pos/src/screens/reception.dart';
+import 'package:pos/src/widgets/Contents/Settings/settings.dart';
 import 'package:pos/src/widgets/Contents/History/history_content.dart';
 import 'package:pos/src/widgets/Contents/Menu/menu_content.dart';
 import 'package:pos/src/widgets/Contents/Order/order_content.dart';
 
 class ContentStage extends StatefulWidget {
-  const ContentStage({
-    Key? key,
-    required this.shopKey,
-    required this.content,
-    required this.menuList,
-    required this.menuTypeList,
-    required this.updateBasket,
-    required this.toggleOrder,
-    required this.renderComplete,
-    required this.setAuth,
-    required this.setMenuList,
-    required this.setEdit,
-    required this.incRendered,
-  }) : super(key: key);
+  const ContentStage(
+      {Key? key,
+      required this.shopKey,
+      required this.content,
+      required this.menuList,
+      required this.menuTypeList,
+      required this.updateBasket,
+      required this.toggleOrder,
+      required this.renderComplete,
+      required this.setAuth,
+      required this.setMenuList,
+      required this.setEdit,
+      required this.syncData})
+      : super(key: key);
 
   final String shopKey;
   final String content;
@@ -32,7 +34,7 @@ class ContentStage extends StatefulWidget {
   final void Function() setAuth;
   final void Function() setMenuList;
   final void Function() setEdit;
-  final void Function() incRendered;
+  final Future<bool> Function() syncData;
 
   @override
   // ignore: no_logic_in_create_state
@@ -43,14 +45,26 @@ class _ContentStageState extends State<ContentStage> {
   String _current = '';
   int activePage = 0;
   final PageController _pageController = PageController();
+  final PageStorageBucket _bucket = PageStorageBucket();
+  bool _needRebuild = false;
+  Map<String, bool> widgetReady = {};
+  late PageView contentBody;
+  late List<String> navbarList = [];
 
   @override
   void initState() {
     super.initState();
     widget.menuList.menu.forEach(
         (key, value) => {widget.menuList.menu[key]?.forEach((item) {})});
+    for (var type in widget.menuTypeList) {
+      widgetReady[type] = false;
+    }
+    final List<String> navbarList =
+        widget.menuTypeList + ['Order', 'History', 'Settings'];
     setState(() {
       _current = widget.content;
+      this.navbarList = navbarList;
+      contentBody = buildPageView(navbarList);
     });
   }
 
@@ -65,12 +79,16 @@ class _ContentStageState extends State<ContentStage> {
         itemBuilder: (context, pagePosition) {
           if (pagePosition < widget.menuTypeList.length) {
             String foodType = widget.menuTypeList[pagePosition];
-            return MenuContent(
-              key: Key(foodType),
-              menuList: widget.menuList,
-              content: foodType,
-              current: _current,
-              updateBasket: widget.updateBasket,
+            return PageStorage(
+              key: PageStorageKey(foodType),
+              bucket: _bucket,
+              child: MenuContent(
+                key: Key(foodType),
+                menuList: widget.menuList,
+                content: foodType,
+                current: _current,
+                updateBasket: widget.updateBasket,
+              ),
             );
           } else {
             switch (navbarList[pagePosition]) {
@@ -85,8 +103,8 @@ class _ContentStageState extends State<ContentStage> {
                   menuList: widget.menuList,
                   shopKey: widget.shopKey,
                 );
-              case 'Exit':
-                return const Text('Exit');
+              case 'Settings':
+                return AppSettings();
               default:
                 return const Text('No Content');
             }
@@ -96,8 +114,7 @@ class _ContentStageState extends State<ContentStage> {
 
   @override
   Widget build(BuildContext context) {
-    final List<String> navbarList =
-        widget.menuTypeList + ['Order', 'History', 'Exit'];
+    print('content_stage - _needRebuild: $_needRebuild');
     if (_current != widget.content) {
       setState(() {
         _current = widget.content;
@@ -107,7 +124,7 @@ class _ContentStageState extends State<ContentStage> {
     return Container(
       decoration: const BoxDecoration(
           color: Colors.white, border: Border(right: BorderSide())),
-      child: buildPageView(navbarList),
+      child: contentBody,
     );
   }
 }

@@ -37,7 +37,5 @@ TableRow genTableRow(
   }
   TableRow tableWidget = TableRow(children: cardList);
 
-  print('tableWidget');
-  print(tableWidget);
   return tableWidget;
 }

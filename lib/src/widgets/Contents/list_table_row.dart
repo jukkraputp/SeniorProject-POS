@@ -27,7 +27,5 @@ List<TableRow> genListTableRow(
     myWidget.add(genTableRow(itemList, perRow, updateBasket, amountMap));
   }
 
-  print('genListTableRow');
-  print(myWidget);
   return myWidget;
 }

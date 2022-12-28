@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
@@ -7,11 +8,9 @@ import 'package:pos/src/interfaces/menu_list.dart';
 import 'package:pos/src/widgets/Contents/Order/order_content.dart';
 
 class Chef extends StatefulWidget {
-  const Chef({Key? key, required this.shopKey, required this.setAuth})
-      : super(key: key);
+  const Chef({Key? key, required this.shopKey}) : super(key: key);
 
   final String shopKey;
-  final void Function(String val) setAuth;
 
   @override
   State<Chef> createState() => _ChefState();
@@ -55,12 +54,14 @@ class _ChefState extends State<Chef> {
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   maximumSize: const Size(100, 100),
+                  backgroundColor: Colors.black,
                   minimumSize: const Size(50, 50),
-                  primary: Colors.black,
                   shape: const StadiumBorder(),
                 ),
-                onPressed: () {
-                  widget.setAuth('');
+                onPressed: () async {
+                  FirebaseAuth.instance
+                      .signOut()
+                      .whenComplete(() => Navigator.of(context).pop());
                 },
                 child: const Center(
                   //crossAxisAlignment: CrossAxisAlignment.center,

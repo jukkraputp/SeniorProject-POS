@@ -2,16 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:pos/src/interfaces/item.dart';
 import 'package:pos/src/interfaces/menu_list.dart';
 import 'package:pos/src/widgets/Contents/list_table_row.dart';
+import 'package:pos/src/widgets/content_stage.dart';
 
 // ignore: must_be_immutable
 class MenuContent extends StatefulWidget {
-  const MenuContent({
-    Key? key,
-    required this.menuList,
-    required this.content,
-    required this.current,
-    required this.updateBasket,
-  }) : super(key: key);
+  const MenuContent(
+      {Key? key,
+      required this.menuList,
+      required this.content,
+      required this.current,
+      required this.updateBasket})
+      : super(key: key);
 
   final MenuList menuList;
   final String content;
@@ -31,6 +32,7 @@ class _MenuContentState extends State<MenuContent>
 
   static int perRow = 4;
   List<TableRow> table = <TableRow>[];
+  bool wantKeepAlive = true;
 
   @override
   void initState() {
@@ -44,7 +46,8 @@ class _MenuContentState extends State<MenuContent>
 
   @override
   Widget build(BuildContext context) {
-    super.build(context);
+    if (widget.menuList.menu['Food1'] != null)
+      print('menu_content - ${widget.menuList.menu['Food1']![0].name}');
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       controller: ScrollController(),
@@ -58,7 +61,4 @@ class _MenuContentState extends State<MenuContent>
   void dispose() {
     super.dispose();
   }
-
-  @override
-  bool get wantKeepAlive => true;
 }

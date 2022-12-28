@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -28,10 +25,7 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -49,6 +43,17 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBx-lVFK128d3N99sDs14sNHG_pu2dRAX0',
+    appId: '1:122178755483:web:ccf35a716bb83df3f99f3e',
+    messagingSenderId: '122178755483',
+    projectId: 'seniorproject-3df90',
+    authDomain: 'seniorproject-3df90.firebaseapp.com',
+    databaseURL: 'https://seniorproject-3df90-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'seniorproject-3df90.appspot.com',
+    measurementId: 'G-FYLSKP7071',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyB9KdK-K3AHUxL2gukM2o3ksJ4QW6X7lSg',
     appId: '1:122178755483:android:1795cef3b5bb94edf99f3e',
@@ -59,6 +64,17 @@ class DefaultFirebaseOptions {
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDR2PJhN0LUuE-EIdIcRVh8TZIDaZLINgU',
+    appId: '1:122178755483:ios:74894d904f2e5b10f99f3e',
+    messagingSenderId: '122178755483',
+    projectId: 'seniorproject-3df90',
+    databaseURL: 'https://seniorproject-3df90-default-rtdb.asia-southeast1.firebasedatabase.app',
+    storageBucket: 'seniorproject-3df90.appspot.com',
+    iosClientId: '122178755483-gsjqepfaulhjb04icv9s433g79hg2n0h.apps.googleusercontent.com',
+    iosBundleId: 'com.example.pos',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyDR2PJhN0LUuE-EIdIcRVh8TZIDaZLINgU',
     appId: '1:122178755483:ios:74894d904f2e5b10f99f3e',
     messagingSenderId: '122178755483',

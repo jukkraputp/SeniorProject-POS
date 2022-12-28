@@ -106,6 +106,7 @@ class API {
   }
 
   Future<MenuList> getMenuList(String key) async {
+    print('get munu list');
     var shopRef = _storage.ref().child(key);
     var types = await shopRef.listAll();
     MenuList result = MenuList(types: types);
@@ -124,6 +125,7 @@ class API {
             '', '', url, imageRef.name.substring(0, imageRef.name.length - 4)));
       }
     }
+    print('setting name and price: $key, $result, $types');
     await setNameAndPrice(key, result, types);
     return result;
   }

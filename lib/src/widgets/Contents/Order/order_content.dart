@@ -77,7 +77,6 @@ class _OrderContentState extends State<OrderContent>
     for (var order in _orders) {
       if (widget.mode == 'Chef' && order.isFinished == true) {
       } else {
-        print(order);
         MenuList orderList = MenuList(typesList: ['order']);
         Map<String, int> amountMap = {};
         order.foods?.forEach((key, value) {
@@ -173,7 +172,6 @@ class _OrderContentState extends State<OrderContent>
         ));
       }
     }
-    print(myWidgets);
     return myWidgets;
   }
 

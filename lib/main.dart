@@ -1,121 +1,51 @@
+import 'dart:io';
+
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pos/src/apis/api.dart';
 import 'package:pos/src/screens/chef.dart';
+import 'package:pos/src/screens/join.dart';
 import 'package:pos/src/screens/login.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:pos/src/screens/recipient.dart';
+import 'package:pos/src/screens/reception.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
 
-void main() {
-  runApp(const App());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await FirebaseAppCheck.instance
+      .activate(androidProvider: AndroidProvider.debug);
+
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.landscapeLeft,
+  ]);
+
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  runApp(const POS());
 }
 
-class App extends StatefulWidget {
-  const App({Key? key}) : super(key: key);
+/* Future _connectToFirebaseEmulator() async {
+  final localHostString = Platform.isAndroid ? '10.0.2.2' : 'localhost';
 
-  @override
-  State<App> createState() => _AppState();
-}
+  await FirebaseAuth.instance.useAuthEmulator(localHostString, 9099);
+} */
 
-class _AppState extends State<App> {
-  String _auth = '';
-  bool _setup = false;
-  bool _render = false;
-  dynamic _shopKey = '';
-
-  void setPrefs(String val) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth', val);
-  }
-
-  dynamic setAuth(String val) async {
-    final String? mode = val != '' ? await API().getMode(val) : '';
-    // ignore: avoid_print
-    print(val);
-    // ignore: avoid_print
-    print(mode);
-    final String? shopKey = val != '' ? await API().getShopKey(val) : '';
-    print(shopKey);
-    if (mode != null && shopKey != null) {
-      setPrefs(val);
-      setState(() {
-        _auth = mode;
-        _shopKey = shopKey;
-      });
-    } else {
-      return const AlertDialog(
-        content: Text('Token is not available.'),
-      );
-    }
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    SharedPreferences.getInstance().then((prefs) {
-      final String? token = prefs.getString('auth');
-      String auth = '';
-      if (token != null) {
-        API().getMode(token).then((value) => auth = value ?? '');
-      }
-      // ignore: avoid_print
-      print(auth);
-      setAuth(auth);
-    });
-
-    setFirebase();
-
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-    ]);
-
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  }
-
-  void setFirebase() {
-    Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    ).then((value) => {
-          setState(() {
-            _setup = true;
-          })
-        });
-  }
-
-  void setRender() {}
+class POS extends StatelessWidget {
+  const POS({super.key});
 
   @override
   Widget build(BuildContext context) {
-    print(_auth);
-    return _setup
-        ? Visibility(
-            visible: !_render,
-            child: MaterialApp(
-                title: 'Senior Project',
-                theme: ThemeData(
-                    primarySwatch: Colors.blue,
-                    bottomSheetTheme: const BottomSheetThemeData(
-                        backgroundColor: Colors.transparent)),
-                home: _auth == ''
-                    ? Login(
-                        setAuth: setAuth,
-                      )
-                    : _auth == 'Recipient'
-                        ? Recipient(
-                            setRender: setRender,
-                            setAuth: setAuth,
-                            shopKey: _shopKey,
-                          )
-                        : Chef(
-                            shopKey: _shopKey,
-                            setAuth: setAuth,
-                          )),
-          )
-        : Center(
-            child: Lottie.asset('assets/animations/colors-circle-loader.json'),
-          );
+    return MaterialApp(
+        title: 'POS',
+        theme: ThemeData(
+            primarySwatch: Colors.blue,
+            bottomSheetTheme: const BottomSheetThemeData(
+                backgroundColor: Colors.transparent)),
+        home: const JoinApp());
   }
 }
