@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -85,16 +86,18 @@ class _OrderContentState extends State<OrderContent>
                 }
                 num cost = orderData['cost'];
                 food_order.Order order = food_order.Order(
-                  isFinished: orderData['isFinished'],
-                  orderId: int.parse(orderNumber.split('order').last),
-                  cost: cost.toDouble(),
-                  date: DateTime.parse(orderData['date']),
-                  itemList: itemList,
-                  ownerUID: widget.shopInfo.uid,
-                  phoneNumber: orderData['shopPhoneNumber'],
-                  shopName: widget.shopInfo.name,
-                  uid: orderData['uid'],
-                );
+                    isCompleted: orderData['isCompleted'],
+                    isFinished: orderData['isFinished'],
+                    isPaid: orderData['isPaid'],
+                    orderId: int.parse(orderNumber.split('order').last),
+                    cost: cost.toDouble(),
+                    date: DateTime.parse(orderData['date']),
+                    itemList: itemList,
+                    ownerUID: widget.shopInfo.uid,
+                    phoneNumber: orderData['shopPhoneNumber'],
+                    shopName: widget.shopInfo.name,
+                    uid: orderData['uid'],
+                    paymentImage: orderData['paymentImage']);
                 orders.add(order);
               }
             }
@@ -112,6 +115,7 @@ class _OrderContentState extends State<OrderContent>
   }
 
   List<Widget> buildWidgets() {
+    Size screenSize = MediaQuery.of(context).size;
     List<Widget> myWidgets = <Widget>[];
     for (var order in _orders) {
       if (widget.mode == 'Chef' && order.isFinished == true) {
@@ -132,6 +136,7 @@ class _OrderContentState extends State<OrderContent>
         int rowNum = ((orderList.menu['order']?.length ?? 5) / 5).ceil();
         double boxHeight = (200 * rowNum + 100).toDouble();
         double statusLightRadius = 20;
+        print('${order.orderId}: ${order.isPaid}');
         myWidgets.add(
           Padding(
               padding: const EdgeInsets.only(bottom: 5),
@@ -146,8 +151,72 @@ class _OrderContentState extends State<OrderContent>
                             Wrap(
                               spacing: 50,
                               children: [
-                                Text('Order ID: ${order.orderId}'),
-                                Text('ราคารวม ${order.cost} บาท')
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      top: (order.paymentImage != null
+                                          ? 10
+                                          : 5)),
+                                  child: Text(
+                                    'Order ID: ${order.orderId}',
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(
+                                      top:
+                                          (order.paymentImage != null ? 5 : 0)),
+                                  child: Text(
+                                    'ราคารวม ${order.cost} บาท',
+                                    style: const TextStyle(fontSize: 20),
+                                  ),
+                                ),
+                                if (!order.isPaid)
+                                  order.paymentImage != null
+                                      ? ElevatedButton(
+                                          onPressed: () {
+                                            showDialog(
+                                                context: context,
+                                                builder: ((context) {
+                                                  return Dialog(
+                                                    child: CachedNetworkImage(
+                                                      height:
+                                                          screenSize.height *
+                                                              0.85,
+                                                      width: screenSize.width *
+                                                          0.42,
+                                                      fit: BoxFit.contain,
+                                                      imageUrl:
+                                                          order.paymentImage!,
+                                                    ),
+                                                  );
+                                                }));
+                                          },
+                                          child: const Text(
+                                            'ดูหลักฐานการชำระเงิน',
+                                            style: TextStyle(fontSize: 20),
+                                          ))
+                                      : const Text(
+                                          'ไม่พบหลักฐานการชำระเงิน',
+                                          style: TextStyle(fontSize: 20),
+                                        ),
+                                if (!order.isPaid)
+                                  ElevatedButton(
+                                      onPressed: () {
+                                        api
+                                            .updatePaymentStatus(
+                                                ownerUID: order.ownerUID,
+                                                shopName: order.shopName,
+                                                orderId: order.orderId!,
+                                                date:
+                                                    '${order.date.year}/${order.date.month}/${order.date.day}')
+                                            .then((res) {
+                                          print(res.body);
+                                        });
+                                      },
+                                      child: const Text(
+                                        'ยืนยันการชำระเงิน',
+                                        style: TextStyle(fontSize: 20),
+                                      ))
                               ],
                             ),
                             if (widget.mode == 'Recipient')

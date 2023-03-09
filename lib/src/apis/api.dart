@@ -38,6 +38,7 @@ class API {
       {required String uid, required String shopName}) async {
     print('get menu of $shopName');
     List<String> types = await getShopTypes(uid, shopName);
+    print('shop types: $types');
     MenuList menuList = MenuList(typesList: types);
     for (var type in types) {
       if (type.isNotEmpty) {
@@ -289,13 +290,29 @@ class API {
 
   // Through backend server
 
+  Future<http.Response> updatePaymentStatus(
+      {required String ownerUID,
+      required String shopName,
+      required int orderId,
+      required String date}) async {
+    return await http.post(Uri.parse('$backendUrl:7777/update-payment'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8'
+        },
+        body: jsonEncode({
+          'ownerUID': ownerUID,
+          'shopName': shopName,
+          'orderId': orderId,
+          'date': date
+        }));
+  }
+
   // delete everything relate to pos tokens
   Future<http.Response> clearToken(
       {required String secret,
       required String username,
       required String token}) async {
-    return await http.post(
-        Uri.parse('http://jukkraputp.sytes.net:7777/clear-token'),
+    return await http.post(Uri.parse('$backendUrl:7777/clear-token'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8'
         },
@@ -307,12 +324,11 @@ class API {
     String jsonEncoded = order.toJsonEncoded();
 
     print('api - addOrder: $jsonEncoded');
-    http.Response httpRes =
-        await http.post(Uri.parse('http://jukkraputp.sytes.net:7777/add'),
-            headers: <String, String>{
-              'Content-Type': 'application/json; charset=UTF-8',
-            },
-            body: jsonEncoded);
+    http.Response httpRes = await http.post(Uri.parse('$backendUrl:7777/add'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncoded);
     return httpRes;
   }
 
@@ -330,7 +346,7 @@ class API {
       'orderId': order.orderId!,
       'date': '${order.date.year}/${order.date.month}/${order.date.day}'
     });
-    return http.post(Uri.parse('http://jukkraputp.sytes.net:7777/finish'),
+    return http.post(Uri.parse('$backendUrl:7777/finish'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -351,7 +367,7 @@ class API {
       'date': '${order.date.year}/${order.date.month}/${order.date.day}'
     });
     print(jsonBody);
-    return http.post(Uri.parse('http://jukkraputp.sytes.net:7777/complete'),
+    return http.post(Uri.parse('$backendUrl:7777/complete'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -494,7 +510,7 @@ class API {
     print(amount);
     print(currency);
     var response = await http.post(
-        Uri.parse('http://jukkraputp.sytes.net:8888/api/v1/start-trans'),
+        Uri.parse('$backendUrl:8888/api/v1/start-trans'),
         headers: <String, String>{
           'Content-Type': 'application/json; charset=UTF-8',
         },

@@ -13,6 +13,7 @@ class Order {
   bool isCompleted;
   bool isFinished;
   bool isPaid;
+  String? paymentImage;
 
   Order(
       {required this.uid,
@@ -25,7 +26,8 @@ class Order {
       this.isCompleted = false,
       this.isFinished = false,
       this.isPaid = false,
-      this.orderId});
+      this.orderId,
+      this.paymentImage});
 
   String toJsonEncoded({Map<String, dynamic>? args}) {
     List<Map<String, dynamic>> itemList = [];
@@ -52,13 +54,16 @@ class Order {
       'date': date.toIso8601String(),
       'isCompleted': isCompleted,
       'isFinished': isFinished,
-      'isPaid': isPaid
+      'isPaid': isPaid,
     };
     if (args != null) {
       obj.addAll(args);
     }
     if (orderId != null) {
       obj['orderId'] = orderId;
+    }
+    if (paymentImage != null) {
+      obj['paymentImage'] = paymentImage;
     }
     return json.encode(obj);
   }
