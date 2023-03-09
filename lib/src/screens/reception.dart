@@ -4,6 +4,8 @@ import 'package:lottie/lottie.dart';
 import 'package:pos/src/apis/api.dart';
 import 'package:pos/src/interfaces/item.dart';
 import 'package:pos/src/interfaces/menu_list.dart';
+import 'package:pos/src/interfaces/order.dart';
+import 'package:pos/src/interfaces/shop_info.dart';
 import 'package:pos/src/widgets/Contents/Settings/settings.dart';
 import 'package:pos/src/widgets/Basket/basket_content.dart';
 import 'package:pos/src/widgets/Contents/item_card.dart';
@@ -15,18 +17,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 API api = API();
 
 class Reception extends StatefulWidget {
-  const Reception({Key? key, required this.shopKey, required this.restart})
-      : super(key: key);
+  const Reception({Key? key, required this.shopInfo}) : super(key: key);
 
-  final String shopKey;
-  final void Function() restart;
+  final ShopInfo shopInfo;
 
   @override
   State<Reception> createState() => _ReceptionState();
 }
 
 class _ReceptionState extends State<Reception> {
-  String _content = 'Food1';
+  late String _content;
   Map<String, int> _basket = {};
   bool confirmingOrder = false;
   bool renderFinished = false;
@@ -46,13 +46,15 @@ class _ReceptionState extends State<Reception> {
   }
 
   Future<bool> syncData() async {
-    // widget.restart();
-    var res = await api.getMenuList(widget.shopKey).then((value) {
+    var res = await api
+        .getShopMenu(uid: widget.shopInfo.uid, shopName: widget.shopInfo.name)
+        .then((value) {
       try {
         List<String> newMenuTypeList = value.menu.keys.toList();
         List<String> newNavbarList =
             newMenuTypeList + ['Order', 'History', 'Settings'];
         setState(() {
+          _content = newMenuTypeList.first;
           menuTypeList = newMenuTypeList;
           navbarList = newNavbarList;
           showBasket = menuTypeList.contains(_content);
@@ -193,8 +195,33 @@ class _ReceptionState extends State<Reception> {
                                   flex: 2,
                                   child: TextButton(
                                       onPressed: () {
-                                        api.addOrder(
-                                            widget.shopKey, _basket, menuList);
+                                        print('basket: $_basket');
+                                        List<ItemCounter> itemList = [];
+                                        double cost = 0;
+                                        _basket.forEach((id, count) {
+                                          String type = id.split('-').first;
+                                          late ItemCounter itemCounter;
+                                          for (var item
+                                              in menuList.menu[type]!) {
+                                            if (item.id == id) {
+                                              itemCounter =
+                                                  ItemCounter(item, count);
+                                              itemList.add(itemCounter);
+                                              cost += item.price * count;
+                                              break;
+                                            }
+                                          }
+                                        });
+                                        Order order = Order(
+                                            uid: widget.shopInfo.uid,
+                                            ownerUID: widget.shopInfo.uid,
+                                            shopName: widget.shopInfo.name,
+                                            phoneNumber:
+                                                widget.shopInfo.phoneNumber,
+                                            itemList: itemList,
+                                            cost: cost,
+                                            date: DateTime.now().toUtc());
+                                        api.addOrder(order);
                                         setState(() {
                                           _basket = {};
                                         });
@@ -220,7 +247,7 @@ class _ReceptionState extends State<Reception> {
   Widget build(BuildContext context) {
     int ratio = 7;
     return WillPopScope(
-        child: widget.shopKey != '' && _ready
+        child: _ready
             ? Row(
                 children: [
                   Expanded(
@@ -233,7 +260,7 @@ class _ReceptionState extends State<Reception> {
                   Expanded(
                       flex: showBasket ? 4 * ratio : 6 * ratio + 1,
                       child: ContentStage(
-                        shopKey: widget.shopKey,
+                        shopInfo: widget.shopInfo,
                         content: _content,
                         menuList: menuList,
                         menuTypeList: menuTypeList,

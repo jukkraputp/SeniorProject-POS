@@ -1,35 +1,40 @@
 import 'package:flutter/material.dart';
 import 'package:pos/src/apis/api.dart';
-import 'package:pos/src/interfaces/history.dart';
+import 'package:pos/src/interfaces/item.dart';
 import 'package:pos/src/interfaces/menu_list.dart';
+import 'package:pos/src/interfaces/order.dart';
+import 'package:pos/src/interfaces/shop_info.dart';
 import 'package:pos/src/widgets/Contents/list_table_row.dart';
 
 class HistoryContent extends StatefulWidget {
   const HistoryContent(
-      {Key? key, required this.menuList, required this.shopKey})
+      {Key? key, required this.menuList, required this.shopInfo})
       : super(key: key);
 
   final MenuList menuList;
-  final String shopKey;
+  final ShopInfo shopInfo;
 
   @override
-  State<HistoryContent> createState() =>
-      // ignore: no_logic_in_create_state
-      _HistoryContentState(menuList, shopKey);
+  State<HistoryContent> createState() => _HistoryContentState();
 }
 
 class _HistoryContentState extends State<HistoryContent> {
-  _HistoryContentState(MenuList menuList, String shopKey);
+  _HistoryContentState();
 
-  List<History> _histories = [];
+  List<Order> _histories = [];
   final API api = API();
 
   @override
   void initState() {
     super.initState();
 
-    api.getHistoryList(widget.shopKey).then((histories) {
-      print(histories);
+    api
+        .getAllHistory(uid: widget.shopInfo.uid, shopName: widget.shopInfo.name)
+        .then((histories) {
+      print('History');
+      for (var order in histories) {
+        print(order.itemList);
+      }
       setState(() {
         _histories = histories;
       });
@@ -41,15 +46,13 @@ class _HistoryContentState extends State<HistoryContent> {
     for (var order in _histories) {
       MenuList orderList = MenuList(typesList: ['order']);
       Map<String, int> amountMap = {};
-      order.foods?.forEach((key, value) {
-        String type = key.split('-')[0];
-        int index = widget.menuList.menu[type]
-                ?.indexWhere((element) => element.id == key) ??
-            -1;
-        var item = widget.menuList.menu[type]![index];
-        orderList.menu['order']?.add(item);
-        amountMap[key] = value;
-      });
+
+      for (ItemCounter itemCounter in order.itemList) {
+        Item item = itemCounter.item;
+        int count = itemCounter.count;
+        amountMap[item.id] = count;
+        orderList.menu['order']!.add(item);
+      }
       int rowNum = ((orderList.menu['order']?.length ?? 5) / 5).ceil();
       double boxHeight = (200 * rowNum + 100).toDouble();
       myWidgets.add(SizedBox(
@@ -64,7 +67,7 @@ class _HistoryContentState extends State<HistoryContent> {
                       spacing: 50,
                       children: [
                         Text('Order ID: ${order.orderId}'),
-                        Text('ราคารวม ${order.totalAmount} บาท')
+                        Text('ราคารวม ${order.cost} บาท')
                       ],
                     ),
                   ],

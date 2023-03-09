@@ -5,12 +5,13 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:lottie/lottie.dart';
 import 'package:pos/src/apis/api.dart';
 import 'package:pos/src/interfaces/menu_list.dart';
+import 'package:pos/src/interfaces/shop_info.dart';
 import 'package:pos/src/widgets/Contents/Order/order_content.dart';
 
 class Chef extends StatefulWidget {
-  const Chef({Key? key, required this.shopKey}) : super(key: key);
+  const Chef({Key? key, required this.shopInfo}) : super(key: key);
 
-  final String shopKey;
+  final ShopInfo shopInfo;
 
   @override
   State<Chef> createState() => _ChefState();
@@ -26,8 +27,9 @@ class _ChefState extends State<Chef> {
   @override
   void initState() {
     super.initState();
-    print('Chef:' + widget.shopKey);
-    api.getMenuList(widget.shopKey).then((value) {
+    api
+        .getShopMenu(uid: widget.shopInfo.uid, shopName: widget.shopInfo.name)
+        .then((value) {
       setState(() {
         menuList = value;
         _ready = true;
@@ -43,7 +45,7 @@ class _ChefState extends State<Chef> {
         ? Scaffold(
             appBar: AppBar(title: const Text('Queue')),
             body: OrderContent(
-                menuList: menuList, shopKey: widget.shopKey, mode: 'Chef'),
+                menuList: menuList, shopInfo: widget.shopInfo, mode: 'Chef'),
             bottomSheet: Container(
               color: Colors.transparent,
               margin: EdgeInsets.only(left: _width * 0.89),

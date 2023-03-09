@@ -14,17 +14,24 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
 
+bool resetPrefs = false;
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await FirebaseAppCheck.instance
-      .activate(androidProvider: AndroidProvider.debug);
+  // await FirebaseAppCheck.instance
+  //     .activate(androidProvider: AndroidProvider.debug);
 
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.landscapeLeft,
   ]);
 
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+
+  if (resetPrefs) {
+    var prefs = await SharedPreferences.getInstance();
+    prefs.clear();
+  }
 
   runApp(const POS());
 }
@@ -41,11 +48,12 @@ class POS extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        title: 'POS',
-        theme: ThemeData(
-            primarySwatch: Colors.blue,
-            bottomSheetTheme: const BottomSheetThemeData(
-                backgroundColor: Colors.transparent)),
-        home: const JoinApp());
+      title: 'POS',
+      theme: ThemeData(
+          primarySwatch: Colors.blue,
+          bottomSheetTheme:
+              const BottomSheetThemeData(backgroundColor: Colors.transparent)),
+      home: const JoinApp(),
+    );
   }
 }

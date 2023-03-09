@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:lottie/lottie.dart';
 import 'package:pos/src/interfaces/item.dart';
 import 'package:pos/src/interfaces/menu_list.dart';
+import 'package:pos/src/interfaces/shop_info.dart';
 import 'package:pos/src/screens/reception.dart';
 import 'package:pos/src/widgets/Contents/Settings/settings.dart';
 import 'package:pos/src/widgets/Contents/History/history_content.dart';
@@ -11,7 +15,7 @@ import 'package:pos/src/widgets/Contents/Order/order_content.dart';
 class ContentStage extends StatefulWidget {
   const ContentStage(
       {Key? key,
-      required this.shopKey,
+      required this.shopInfo,
       required this.content,
       required this.menuList,
       required this.menuTypeList,
@@ -24,7 +28,7 @@ class ContentStage extends StatefulWidget {
       required this.syncData})
       : super(key: key);
 
-  final String shopKey;
+  final ShopInfo shopInfo;
   final String content;
   final MenuList menuList;
   final List<String> menuTypeList;
@@ -50,6 +54,7 @@ class _ContentStageState extends State<ContentStage> {
   Map<String, bool> widgetReady = {};
   late PageView contentBody;
   late List<String> navbarList = [];
+  bool _buildComplete = false;
 
   @override
   void initState() {
@@ -66,6 +71,22 @@ class _ContentStageState extends State<ContentStage> {
       this.navbarList = navbarList;
       contentBody = buildPageView(navbarList);
     });
+  }
+
+  Future<bool> syncData() async {
+    print('sync data');
+    setState(() {
+      _needRebuild = true;
+    });
+    bool res = await widget.syncData();
+    if (res) {
+      setState(() {
+        _buildComplete = false;
+        contentBody = buildPageView(navbarList);
+        _needRebuild = false;
+      });
+    }
+    return res;
   }
 
   PageView buildPageView(List<String> navbarList) {
@@ -95,16 +116,18 @@ class _ContentStageState extends State<ContentStage> {
               case 'Order':
                 return OrderContent(
                   menuList: widget.menuList,
-                  shopKey: widget.shopKey,
+                  shopInfo: widget.shopInfo,
                   mode: 'Recipient',
                 );
               case 'History':
                 return HistoryContent(
                   menuList: widget.menuList,
-                  shopKey: widget.shopKey,
+                  shopInfo: widget.shopInfo,
                 );
               case 'Settings':
-                return AppSettings();
+                return AppSettings(
+                  syncData: syncData,
+                );
               default:
                 return const Text('No Content');
             }
@@ -112,19 +135,41 @@ class _ContentStageState extends State<ContentStage> {
         });
   }
 
+  /// Used to trigger an event when the widget has been built
+  Future<bool> initializeController() {
+    Completer<bool> completer = new Completer<bool>();
+
+    /// Callback called after widget has been fully built
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      completer.complete(true);
+    });
+
+    return completer.future;
+  }
+
   @override
   Widget build(BuildContext context) {
-    print('content_stage - _needRebuild: $_needRebuild');
     if (_current != widget.content) {
       setState(() {
         _current = widget.content;
         _pageController.jumpToPage(navbarList.indexOf(widget.content));
       });
     }
-    return Container(
-      decoration: const BoxDecoration(
-          color: Colors.white, border: Border(right: BorderSide())),
-      child: contentBody,
-    );
+    initializeController().then((value) {
+      if (!_buildComplete) {
+        setState(() {
+          _buildComplete = true;
+          _pageController.jumpToPage(navbarList.indexOf(widget.content));
+        });
+      }
+    });
+    return _needRebuild
+        ? Center(
+            child: Lottie.asset('assets/animations/colors-circle-loader.json'),
+          )
+        : Container(
+            decoration: const BoxDecoration(
+                color: Colors.white, border: Border(right: BorderSide())),
+            child: contentBody);
   }
 }

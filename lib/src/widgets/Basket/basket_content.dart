@@ -28,7 +28,7 @@ class BasketContent extends StatelessWidget {
       List<Item> arr = menuList.menu[foodType] ?? [];
       int index = arr.indexWhere((item) => item.id == key);
       Item item = arr[index];
-      double price = double.tryParse(item.price) ?? 0;
+      double price = item.price;
       widgets.add(
         Container(
             padding: const EdgeInsets.only(left: 2.5, top: 5),

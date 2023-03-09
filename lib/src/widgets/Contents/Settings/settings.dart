@@ -5,9 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:pos/src/screens/login.dart';
+import 'package:restart_app/restart_app.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AppSettings extends StatelessWidget {
-  const AppSettings({super.key});
+  final Future<bool> Function() syncData;
+
+  const AppSettings({super.key, required this.syncData});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +20,7 @@ class AppSettings extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Container(
+        /* Container(
           decoration: BoxDecoration(
             color: Colors.black,
             border: Border.all(color: Colors.black, width: 2),
@@ -25,12 +29,14 @@ class AppSettings extends StatelessWidget {
           width: MediaQuery.of(context).size.width / buttonSizeDivisor,
           height: MediaQuery.of(context).size.height / buttonSizeDivisor,
           child: TextButton(
-              onPressed: () {},
+              onPressed: () {
+                syncData();
+              },
               child: const Text(
                 'Sync Data',
                 style: TextStyle(fontSize: 36),
               )),
-        ),
+        ), */
         Container(
           decoration: BoxDecoration(
             color: Colors.black,
@@ -41,6 +47,8 @@ class AppSettings extends StatelessWidget {
           height: MediaQuery.of(context).size.height / buttonSizeDivisor,
           child: TextButton(
               onPressed: () async {
+                var prefs = await SharedPreferences.getInstance();
+                prefs.clear();
                 await FirebaseAuth.instance.signOut();
               },
               child: const Text(
